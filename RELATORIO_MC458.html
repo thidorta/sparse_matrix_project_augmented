@@ -1,0 +1,63 @@
+<!doctype html><meta charset="utf-8"><style>body{font:16px/1.6 sans-serif;max-width:900px;margin:40px auto;padding:0 16px}img{max-width:100%}h1,h2,h3{margin-top:1.2em}</style><body>
+<h1>Relatório  Matrizes Esparsas (Hash vs AVL)</h1>
+<p></p>
+<p><b>Autores:<b> Gabriel Pereira</p>
+<p><b>Disciplina:<b> MC458</p>
+<p><b>Data:<b> 2025-11-18</p>
+<p></p>
+<h2>Resumo</h2>
+<p></p>
+<p>Implementamos duas estruturas para matrizes esparsas: (i) *dict-of-dicts* (hash, O(1) médio) e (ii) árvore AVL por chave (i,j) (O(log k) garantido), além de baseline denso. Comparamos `add`, `scale`, `matmul` e `transpose` nos tamanhos e densidades do enunciado. Razões de tempo típicas: mediana(tree/dict) ≈ <b>61.9×<b>, mediana(dense/dict) ≈ <b>34.8×<b>.</p>
+<p></p>
+<h2>Introdução</h2>
+<p></p>
+<p>Dizemos que uma matriz é <b>esparsa<b> quando o número de elementos não nulos `k` satisfaz `k ≪ n·m`. Nesses cenários, estruturas esparsas evitam varrer zeros, reduzindo custo temporal e espacial.</p>
+<p></p>
+<h2>Estruturas de Dados</h2>
+<p></p>
+<h3>Hash (dict-of-dicts)</h3>
+<p>- Layout: linha → {coluna → valor}; zeros removem a entrada.</p>
+<p>- Complexidades: `get/set` O(1) médio; `transpose` O(1); `add` O(kA+kB); `scale` O(k); `matmul` ≈ O(kA·dB).</p>
+<p></p>
+<h3>AVL (árvore por (i,j))</h3>
+<p>- Chave `(i,j)` em ordem lexicográfica; `iter_row(i)` por faixa.</p>
+<p>- Complexidades: `get/set` O(log k); `transpose` O(1); `add` O((kA+kB)·log k); `scale` O(k); `matmul` ≈ O(kA·dB·log kC).</p>
+<p></p>
+<h2>Metodologia Experimental</h2>
+<p></p>
+<p>Tamanhos testados: 100, 200, 500, 1000.</p>
+<p>Densidades testadas: 0.01, 0.05, 0.1, 0.2.</p>
+<p>Operações: add, matmul, scale.</p>
+<p>Tempo reportado: melhor de N repetições por caso.</p>
+<p></p>
+<h2>Resultados</h2>
+<p></p>
+<p><b>add — tempo vs n<b> (densidade 0.01):</p>
+<figure><img src="results/figs_item2/time_vs_n_add_d0p01.png" alt="add vs n"><figcaption>add vs n</figcaption></figure>
+<p></p>
+<p><b>add — tempo vs n<b> (densidade 0.2):</p>
+<figure><img src="results/figs_item2/time_vs_n_add_d0p2.png" alt="add vs n"><figcaption>add vs n</figcaption></figure>
+<p></p>
+<p><b>add — tempo vs densidade<b> (n100):</p>
+<figure><img src="results/figs_item2/time_vs_density_add_n100.png" alt="add vs densidade"><figcaption>add vs densidade</figcaption></figure>
+<p></p>
+<p><b>add — tempo vs densidade<b> (n1000):</p>
+<figure><img src="results/figs_item2/time_vs_density_add_n1000.png" alt="add vs densidade"><figcaption>add vs densidade</figcaption></figure>
+<p></p>
+<p><b>scale — tempo vs n<b> (densidade 0.01):</p>
+<figure><img src="results/figs_item2/time_vs_n_scale_d0p01.png" alt="scale vs n"><figcaption>scale vs n</figcaption></figure>
+<p></p>
+<p><b>scale — tempo vs n<b> (densidade 0.2):</p>
+<figure><img src="results/figs_item2/time_vs_n_scale_d0p2.png" alt="scale vs n"><figcaption>scale vs n</figcaption></figure>
+<p></p>
+<h2>Discussão</h2>
+<p></p>
+<p>- Hash domina em baixa densidade (constante menor + O(1) médio).</p>
+<p>- AVL oferece garantias e boa varredura ordenada, porém paga o fator log.</p>
+<p>- Denso só se aproxima em densidades altas ou tamanhos pequenos.</p>
+<p>- `transpose` é lógico (O(1)) e não depende de `nnz`.</p>
+<p></p>
+<h2>Conclusão</h2>
+<p></p>
+<p>Em instâncias esparsas, <b>dict-of-dicts<b> tende a ser a melhor escolha prática; a <b>AVL<b> é indicada quando a ordenação e limites assintóticos garantidos são requisitos. Para densidades altas, representações densas tendem a vencer.</p>
+</body>
