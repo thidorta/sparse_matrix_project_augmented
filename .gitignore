@@ -1,0 +1,8 @@
+.venv   
+.vscode
+*__pycache__*
+genaisrc
+.genaiscript
+.github
+assets
+.env

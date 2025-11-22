@@ -1,171 +1,159 @@
-class SparseMatrix:
-    def __init__(self, rows: int, cols: int):
-        self.rows = rows
-        self.cols = cols
-        self.data: dict[int, dict[int, float]] = {}  # row -> {col -> value}
-        self.is_transposed = False
-        self.shape = (rows, cols)
+class MatrizEsparsa:
+    def __init__(self, linhas: int, colunas: int):
+        self.colunas = colunas
+        self.linhas = linhas
+        self.corpo = (linhas, colunas)
+        self.dado: dict[int, dict[int, float]] = {}  # linha -> {coluna -> valor}
+        self.e_transposta = False
 
     @classmethod
-    def load_from_file(cls, file_path):
-        # load from a file containing the matrix in dense format
-        with open(file_path, 'r') as f:
-            lines = f.readlines()
+    def carrega_do_arquivo(cls, caminho):
+        with open(caminho, 'r') as f:
+            linhas = f.readlines()
 
-        rows = len(lines)
-        cols = len(lines[0].strip().split())
-        matrix = cls(rows, cols) 
+        linhas = len(linhas)
+        colunas = len(linhas[0].strip().split())
+        matriz = cls(linhas, colunas) 
 
-        for i, line in enumerate(lines):
-            for j, value in enumerate(line.strip().split()):
-                matrix.insert(i, j, float(value))
+        for i, linha in enumerate(linhas):
+            for j, valor in enumerate(linha.strip().split()):
+                matriz.inserir(i, j, float(valor))
 
-        return matrix
+        return matriz
 
     @classmethod
-    def random(cls, rows, cols, density=0.2, value_range=(1, 10)):
+    def random(cls, linhas, colunas, densidade = 0.2, intervalo_valor=(1, 10)):
         import random
-        matrix = cls(rows, cols)
-        non_zero_elements = int(rows * cols * density)
+        matriz = cls(linhas, colunas)
+        elementos_nao_nulos = int(linhas * colunas * densidade)
 
-        for _ in range(non_zero_elements):
+        for _ in range(elementos_nao_nulos):
             while True:
-                i = random.randint(0, rows - 1)
-                j = random.randint(0, cols - 1)
-                if matrix.access(i, j) == 0:
-                    value = random.uniform(value_range[0], value_range[1])
-                    matrix.insert(i, j, value)
+                i = random.randint(0, linhas - 1)
+                j = random.randint(0, colunas - 1)
+                if matriz.acessar(i, j) == 0:
+                    valor = random.uniform(intervalo_valor[0], intervalo_valor[1])
+                    matriz.inserir(i, j, valor)
                     break
 
-        return matrix           
+        return matriz           
     
-    # display matrix in a human-readable format
+    # display matriz in a human-readable format
     def show(self, dense=False):
         if dense:
-            for i in range(self.rows):
-                row_values = []
-                for j in range(self.cols):
-                    row_values.append(str(self.access(i, j)))
-                print(" ".join(row_values))
+            for i in range(self.linhas):
+                linha_valors = []
+                for j in range(self.colunas):
+                    linha_valors.append(str(self.acessar(i, j)))
+                print(" ".join(linha_valors))
         else:
-            for row, cols_dict in self.data.items():
-                for col, value in cols_dict.items():
-                    print(f"({row}, {col}): {value}")
+            for linha, colunas_dict in self.dado.items():
+                for col, valor in colunas_dict.items():
+                    print(f"({linha}, {col}): {valor}")
 
-    # MATRIX OPERATIONS
-    def access(self, i, j):
-        r, c = self._get_coords(i, j)
-        return self.data.get(r, {}).get(c, 0.0)
+    # OPERAÇÕES DA MATRIZ
+    def acessar(self, i, j):
+        l, c = self.get_coordenadas(i, j)
+        return self.dado.get(l, {}).get(c, 0.0)
 
-    def insert(self, i, j, value):
-        r, c = self._get_coords(i, j)
-        if value == 0:
-            # Remove zero elements to maintain sparsity
-            if r in self.data and c in self.data[r]:
-                del self.data[r][c]
-                if not self.data[r]:
-                    del self.data[r]
+    def inserir(self, i, j, valor):
+        l, c = self.get_coordenadas(i, j)
+        if valor == 0:
+            if l in self.dado and c in self.dado[l]:
+                del self.dado[l][c]
+                if not self.dado[l]:
+                    del self.dado[l]
         else:
-            if r not in self.data:
-                self.data[r] = {}
-            self.data[r][c] = value
+            if l not in self.dado:
+                self.dado[l] = {}
+            self.dado[l][c] = valor
 
     def transpose(self):
-        self.is_transposed = not self.is_transposed
-        self.shape = (self.shape[1], self.shape[0])
+        self.e_transposta = not self.e_transposta
+        self.corpo = (self.corpo[1], self.corpo[0])
 
-    # handle transparent transposition
-    def _get_coords(self, row, col):
-        if self.is_transposed:
-            return col, row
-        return row, col
+    def get_coordenadas(self, linha, coluna):
+        if self.e_transposta:
+            return coluna, linha
+        return linha, coluna
 
-    def __add__(self, other): # TODO: Test zero values after addition
-        if not isinstance(other, SparseMatrix):
-            raise ValueError("Can only add another matrix of the same type.")
+    def soma(self, other): # TODO: Testa os zeros depois de somar.
+        if not isinstance(other, MatrizEsparsa):
+            raise ValueError("Só é possível somar matrizes do mesmo tipo.")
 
-        if self.shape != other.shape:
-            raise ValueError("Matrices must have the same dimension to be added.")
+        if self.corpo != other.corpo:
+            raise ValueError("As matrizes tem que ter a mesma dimenção para seram somadas.")
         
-        result = SparseMatrix(self.rows, self.cols)
+        resultado = MatrizEsparsa(self.linhas, self.colunas)
         
-        # Copy all elements from self
-        for row, cols_dict in self.data.items():
-            result.data[row] = cols_dict.copy()
+        for linha, colunas_dict in self.dado.items(): # Copia todos os elementos da primeira matriz
+            resultado.dado[linha] = colunas_dict.copy()
         
-        # Add elements from other
-        for row, cols_dict in other.data.items():
-            if row not in result.data:
-                result.data[row] = {}
-            for col, value in cols_dict.items():
-                new_value = result.data[row].get(col, 0) + value
-                if new_value == 0:
-                    if col in result.data[row]:
-                        del result.data[row][col]
+        for linha, colunas_dict in other.dado.items(): # Soma os elementos das matrizes
+            if linha not in resultado.dado:
+                resultado.dado[linha] = {}
+            for col, valor in colunas_dict.items():
+                novo_valor = resultado.dado[linha].get(col, 0) + valor
+                if novo_valor == 0:
+                    if col in resultado.dado[linha]:
+                        del resultado.dado[linha][col]
                 else:
-                    result.data[row][col] = new_value
+                    resultado.dado[linha][col] = novo_valor
             
-            # Clean up empty rows
-            if not result.data[row]:
-                del result.data[row]
-        
-        return result
+            if not resultado.dado[linha]: # Deleta as linhas vazias
+                del resultado.dado[linha]
+        return resultado
         
     def __radd__(self, other):
-        return self.__add__(other)
+        return self.soma(other)
         
-    # Scalar multiplication
-    def _scalar_mul(self, scalar):
-        result = SparseMatrix(self.rows, self.cols)
+    def mult_escalar(self, escalar):
+        resultado = MatrizEsparsa(self.linhas, self.colunas)
 
-        for row, cols_dict in self.data.items():
-            result.data[row] = {}
-            for col, value in cols_dict.items():
-                new_value = value * scalar
-                if new_value != 0:
-                    result.data[row][col] = new_value
+        for linha, colunas_dict in self.dado.items():
+            resultado.dado[linha] = {}
+            for col, valor in colunas_dict.items():
+                novo_valor = valor * escalar
+                if novo_valor != 0:
+                    resultado.dado[linha][col] = novo_valor
             
-            if not result.data[row]:
-                del result.data[row]
+            if not resultado.dado[linha]:
+                del resultado.dado[linha]
 
-        return result
+        return resultado
 
-    def _matrix_mul(self, other):
-        if self.cols != other.rows:
-            raise ValueError("Incompatible dimensions for multiplication")
+    def mult_matriz(self, other):
+        if self.colunas != other.linhas:
+            raise ValueError("Dimensões diferentes")
         
-        result = SparseMatrix(self.rows, other.cols)
+        resultado = MatrizEsparsa(self.linhas, other.colunas)
         
-        # For each non-zero in A, multiply with relevant non-zeros in B
-        for a_row, a_cols in self.data.items():
-            # Build result row
-            result_row = {}
+        for a_linha, a_colunas in self.dado.items():
+            resultado_linha = {}
             
-            for a_col, a_val in a_cols.items():
-                # If B has non-zeros in this column (a_col acts as row in B)
-                if a_col in other.data:
-                    for b_col, b_val in other.data[a_col].items():
-                        result_row[b_col] = result_row.get(b_col, 0) + a_val * b_val
+            for a_col, a_val in a_colunas.items():
+                if a_col in other.dado:
+                    for b_col, b_val in other.dado[a_col].items():
+                        resultado_linha[b_col] = resultado_linha.get(b_col, 0) + a_val * b_val
             
-            # Remove zeros and store if non-empty
-            result_row = {col: val for col, val in result_row.items() if val != 0}
-            if result_row:
-                result.data[a_row] = result_row
+            resultado_linha = {col: val for col, val in resultado_linha.items() if val != 0}
+            if resultado_linha:
+                resultado.dado[a_linha] = resultado_linha
         
-        return result
+        return resultado
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
-            return self._scalar_mul(other)
-        elif isinstance(other, SparseMatrix):
-            return self._matrix_mul(other)
+            return self.mult_escalar(other)
+        elif isinstance(other, MatrizEsparsa):
+            return self.mult_matriz(other)
         else:
-            raise NotImplementedError("Multiplication only supports scalar values or another SparseMatrix.")
+            raise NotImplementedError("Multiplication only supports escalar valors or another MatrizEsparsa.")
         
     def __rmul__(self, other):
         if isinstance(other, (int, float)):
             return self.__mul__(other)
-        elif isinstance(other, SparseMatrix):
+        elif isinstance(other, MatrizEsparsa):
             return other.__mul__(self)
         else:
-            raise NotImplementedError("Multiplication only supports scalar values or another SparseMatrix.")
+            raise NotImplementedError("Multiplication only supports escalar valors or another MatrizEsparsa.")

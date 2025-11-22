@@ -76,7 +76,7 @@ def _insert(x: Optional[_Node], key: Key, val: float) -> _Node:
         if _cmp(key, x.rh.key) > 0:
             return _rotL(x)            # RR
         else:
-            x.rh = _rotR(x.rh)         # RL  (<<< AQUI era o erro)
+            x.rh = _rotR(x.rh)         # RL 
             return _rotL(x)
     return x
 
